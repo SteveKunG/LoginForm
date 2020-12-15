@@ -26,9 +26,11 @@ public class Main implements ActionListener, KeyListener
     private JTextField usernameField;
     private JPasswordField passwordTextField;
     private JButton loginButton;
+    private JButton infoButton;
     private static final Gson GSON = new Gson();
     private TrayIcon trayIcon;
     private SystemTray tray;
+    private Font font;
 
     private static final Pattern STUDENT_ID_PATTERN = Pattern.compile("^(?=.*\\d).{11}$");
     private static final String API_URL = "http://aritdoc.lpru.ac.th/api/api2/authentication";
@@ -66,6 +68,31 @@ public class Main implements ActionListener, KeyListener
             {
                 this.unfocusComponent(this.loginButton);
             }
+        }
+        else if (event.getSource() == this.infoButton)
+        {
+            JFrame frame = new JFrame();
+            frame.setAlwaysOnTop(true);
+            JOptionPane.showMessageDialog(frame, "สำหรับบุคลากร\r\n"
+                    + "ใช้ ชื่อผู้ใช้ และ รหัสผ่าน ระบบบัญชีเดียว (Single Sign On.)\r\n"
+                    + "\r\n"
+                    + "สำหรับนักศึกษา\r\n"
+                    + "ชื่อผู้ใช้งาน ใช้ รหัสนักศึกษา\r\n"
+                    + "รหัสผ่าน ใช้ วันเดือนปีเกิด 6 หลัก และ\r\n"
+                    + "เลขท้าย 4 หลัก ของเลขบัตรประจำตัวประชาชน\r\n"
+                    + "\r\n"
+                    + "ตัวอย่าง\r\n"
+                    + "เกิดวันที่ 5 กันยายน 2545 > (050945)\r\n"
+                    + "เลขบัตรประจำตัวประชาชน 2500300066489\r\n"
+                    + "จะได้รหัสผ่านดังนี้ : 0509456489", "การลงชื่อเข้าใช้งานระบบ", JOptionPane.INFORMATION_MESSAGE);
+
+
+
+            //            JOptionPane.showMessageDialog(frame, "<html><p><strong>สำหรับบุคลากร</strong></p>\r\n"
+            //                    + "ใช้ ชื่อผู้ใช้ และ รหัสผ่าน ระบบบัญชีเดียว (Single Sign On.)\r\n"
+            //                    + "<html><p><strong>สำหรับนักศึกษา</strong></p></html>\r\n"
+            //                    + "ชื่อผู้ใช้งาน ใช้ รหัสนักศึกษา<html><p><br />รหัสผ่าน ใช้&nbsp;<em>วันเดือนปีเกิด 6 หลัก และ<br />เลขท้าย 4 หลัก ของเลขบัตรประจำตัวประชาชน</em></p></html>\r\n"
+            //                    + "<html><p><br /><strong>ตัวอย่าง</strong><br />เกิดวันที่ 5 กันยายน 2545 &gt; (050945)<br />เลขบัตรประจำตัวประชาชน 250030006<span style=\"color: #ff0000;\">6489</span><br />จะได้รหัสผ่านดังนี้ :&nbsp;<strong>0509456489</strong></p></html>", "การลงชื่อเข้าใช้งานระบบ", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -124,22 +151,13 @@ public class Main implements ActionListener, KeyListener
             Main.displayErrorMessage("System Tray not supported", "Current operation system is not supported!");
         }
 
-        boolean hideAll = true;
-
-        if (hideAll)
-        {
-            Rectangle rectangle = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
-            this.frame.setUndecorated(true);
-            this.frame.setAlwaysOnTop(true);
-            this.frame.setExtendedState(Frame.MAXIMIZED_BOTH);
-            this.frame.setSize(rectangle.width, rectangle.height);
-            this.frame.setType(JFrame.Type.UTILITY);
-            this.frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-        }
-        else
-        {
-            this.frame.setBounds(100, 100, 450, 300);
-        }
+        Rectangle rectangle = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
+        this.frame.setUndecorated(true);
+        this.frame.setAlwaysOnTop(true);
+        this.frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+        this.frame.setSize(rectangle.width, rectangle.height);
+        this.frame.setType(JFrame.Type.UTILITY);
+        this.frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 
         try
         {
@@ -157,30 +175,70 @@ public class Main implements ActionListener, KeyListener
         this.frame.getContentPane().setFocusTraversalKeysEnabled(false);
         this.frame.getContentPane().setLayout(null);
 
+        try
+        {
+            this.font = Font.createFont(Font.TRUETYPE_FONT, new FileInputStream("resources/kanit.ttf"));
+            this.font = this.font.deriveFont(Font.PLAIN, 18.0F);
+        }
+        catch (FontFormatException | IOException e)
+        {
+            e.printStackTrace();
+        }
+
+        UIManager.put("OptionPane.messageFont", this.font);
+        UIManager.put("OptionPane.buttonFont", this.font);
+        this.frame.setFont(this.font);
+
         this.usernameField = new JTextField();
-        this.usernameField.setBounds(140, 112, 86, 20);
+        this.usernameField.setBounds(121, 102, 174, 20);
         this.usernameField.addKeyListener(this);
+        this.usernameField.setFont(this.font.deriveFont(Font.PLAIN, 18.0F));
         this.frame.getContentPane().add(this.usernameField);
         this.usernameField.setColumns(10);
 
         this.passwordTextField = new JPasswordField();
-        this.passwordTextField.setBounds(140, 154, 86, 20);
+        this.passwordTextField.setBounds(121, 164, 174, 20);
         this.passwordTextField.addKeyListener(this);
+        this.passwordTextField.setFont(this.passwordTextField.getFont().deriveFont(18.0F));
         this.frame.getContentPane().add(this.passwordTextField);
         this.passwordTextField.setColumns(10);
 
         this.loginButton = new JButton("Login");
         this.loginButton.addActionListener(this);
-        this.loginButton.setBounds(137, 185, 89, 23);
+        this.loginButton.setBounds(121, 195, 89, 44);
+        this.loginButton.setFont(this.font);
         this.frame.getContentPane().add(this.loginButton);
 
-        JLabel lblNewLabel = new JLabel("Student ID");
-        lblNewLabel.setBounds(51, 115, 58, 14);
-        this.frame.getContentPane().add(lblNewLabel);
+        JLabel usernameLabel = new JLabel("รหัสนักศึกษา/Student ID");
+        usernameLabel.setBounds(111, 71, 199, 20);
+        usernameLabel.setFont(this.font);
+        this.frame.getContentPane().add(usernameLabel);
 
-        JLabel lblNewLabel_1 = new JLabel("Password");
-        lblNewLabel_1.setBounds(51, 157, 46, 14);
-        this.frame.getContentPane().add(lblNewLabel_1);
+        JLabel passwordLabel = new JLabel("รหัสผ่าน/Password");
+        passwordLabel.setBounds(113, 133, 197, 20);
+        passwordLabel.setFont(this.font);
+        this.frame.getContentPane().add(passwordLabel);
+
+        JLabel titleLabel = new JLabel("LPRU Authentication");
+        titleLabel.setBounds(111, 38, 184, 20);
+        titleLabel.setFont(this.font);
+        this.frame.getContentPane().add(titleLabel);
+
+        this.infoButton = new JButton("");
+        this.infoButton.addActionListener(this);
+        this.infoButton.setBounds(251, 195, 44, 44);
+
+        try
+        {
+            Image image = ImageIO.read(new File("resources/help.png")).getScaledInstance(44, 44, Image.SCALE_SMOOTH);
+            this.infoButton.setIcon(new ImageIcon(image));
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
+        this.frame.getContentPane().add(this.infoButton);
     }
 
     private boolean performedLogin()
@@ -257,19 +315,19 @@ public class Main implements ActionListener, KeyListener
             }
             else
             {
-                Main.displayErrorMessage("Failed to login", "Please make sure your username or password is correct!");
+                Main.displayErrorMessage("ไม่สามารถล็อกอินได้", "โปรดเช็คชื่อผู้ใช้และรหัสผ่านให้ถูกต้อง");
                 return false;
             }
         }
         catch (MalformedURLException | ProtocolException e)
         {
-            Main.displayErrorMessage("An exception occurred when trying to connect the database", e.getMessage());
+            Main.displayErrorMessage("ไม่สามารถเชื่อมต่อฐานข้อมูลได้", e.getMessage());
             e.printStackTrace();
             return false;
         }
         catch (IOException e)
         {
-            Main.displayErrorMessage("An exception occurred when trying to post data", e.getMessage());
+            Main.displayErrorMessage("ไม่สามารถส่งข้อมูลไปยังฐานข้อมูลได้", e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -281,7 +339,7 @@ public class Main implements ActionListener, KeyListener
 
         if (username == null || username.isEmpty())
         {
-            Main.displayInfoMessage("Empty username!", "Please complete fill in the box");
+            Main.displayInfoMessage("ชื่อผู้ใช้ว่างเปล่า", "โปรดกรอกในช่อง");
             return false;
         }
 
@@ -293,7 +351,7 @@ public class Main implements ActionListener, KeyListener
         }
         else
         {
-            Main.displayInfoMessage("Invalid username pattern!", "Must be your Student ID and at least 11 characters");
+            Main.displayInfoMessage("ชื่อผู้ใช้ไม่ถูกต้อง", "ต้องเป็นรหัสนักศึกษาและความยาวอย่างน้อย 11 ตัว");
             return false;
         }
     }
@@ -304,7 +362,7 @@ public class Main implements ActionListener, KeyListener
 
         if (password == null || password.isEmpty())
         {
-            Main.displayInfoMessage("Empty password!", "Please complete fill in the box");
+            Main.displayInfoMessage("รหัสผ่านว่างเปล่า", "โปรดกรอกในช่อง");
             return false;
         }
         return true;
@@ -319,7 +377,7 @@ public class Main implements ActionListener, KeyListener
     private void processLogout()
     {
         this.frame.setVisible(true);
-        this.frame.setExtendedState(Frame.NORMAL);
+        this.frame.setExtendedState(Frame.MAXIMIZED_BOTH);
         this.tray.remove(this.trayIcon);
         this.passwordTextField.setText("");
     }
@@ -328,13 +386,13 @@ public class Main implements ActionListener, KeyListener
     {
         JFrame frame = new JFrame();
         frame.setAlwaysOnTop(true);
-        JOptionPane.showMessageDialog(frame, "Reason: " + info, message, JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(frame, "เหตุผล: " + info, message, JOptionPane.INFORMATION_MESSAGE);
     }
 
     private static void displayErrorMessage(String message, String info)
     {
         JFrame frame = new JFrame();
         frame.setAlwaysOnTop(true);
-        JOptionPane.showMessageDialog(frame, "Reason: " + info, message, JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(frame, "เหตุผล: " + info, message, JOptionPane.ERROR_MESSAGE);
     }
 }
