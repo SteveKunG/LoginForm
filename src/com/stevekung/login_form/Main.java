@@ -20,7 +20,7 @@ import javax.swing.*;
 
 import com.google.gson.Gson;
 
-public class Test implements ActionListener, KeyListener
+public class Main implements ActionListener, KeyListener
 {
     private final JFrame frame = new JFrame();
     private JTextField usernameField;
@@ -37,13 +37,13 @@ public class Test implements ActionListener, KeyListener
 
     public static void main(String[] args)
     {
-        SwingUtilities.invokeLater(Test::new);
+        SwingUtilities.invokeLater(Main::new);
     }
 
     /**
      * @wbp.parser.entryPoint
      */
-    public Test()
+    public Main()
     {
         this.init();
 
@@ -121,7 +121,7 @@ public class Test implements ActionListener, KeyListener
         }
         else
         {
-            Test.displayErrorMessage("System Tray not supported", "Current operation system is not supported!");
+            Main.displayErrorMessage("System Tray not supported", "Current operation system is not supported!");
         }
 
         boolean hideAll = true;
@@ -201,7 +201,7 @@ public class Test implements ActionListener, KeyListener
 
         try
         {
-            URL url = new URL(Test.API_URL);
+            URL url = new URL(Main.API_URL);
             HttpURLConnection http = (HttpURLConnection) url.openConnection();
             http.setRequestMethod("POST");
             http.setDoOutput(true);
@@ -238,7 +238,7 @@ public class Test implements ActionListener, KeyListener
             }
 
             String result = new BufferedReader(new InputStreamReader(http.getInputStream())).lines().collect(Collectors.joining("\n"));
-            LoginData data = Test.GSON.fromJson(result, LoginData.class);
+            LoginData data = Main.GSON.fromJson(result, LoginData.class);
 
             if (data.isLoggedIn())
             {
@@ -246,8 +246,8 @@ public class Test implements ActionListener, KeyListener
 
                 try
                 {
-                    Test.this.tray.add(Test.this.trayIcon);
-                    Test.this.frame.setVisible(false);
+                    Main.this.tray.add(Main.this.trayIcon);
+                    Main.this.frame.setVisible(false);
                 }
                 catch (AWTException e)
                 {
@@ -257,19 +257,19 @@ public class Test implements ActionListener, KeyListener
             }
             else
             {
-                Test.displayErrorMessage("Failed to login", "Please make sure your username or password is correct!");
+                Main.displayErrorMessage("Failed to login", "Please make sure your username or password is correct!");
                 return false;
             }
         }
         catch (MalformedURLException | ProtocolException e)
         {
-            Test.displayErrorMessage("An exception occurred when trying to connect the database", e.getMessage());
+            Main.displayErrorMessage("An exception occurred when trying to connect the database", e.getMessage());
             e.printStackTrace();
             return false;
         }
         catch (IOException e)
         {
-            Test.displayErrorMessage("An exception occurred when trying to post data", e.getMessage());
+            Main.displayErrorMessage("An exception occurred when trying to post data", e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -281,11 +281,11 @@ public class Test implements ActionListener, KeyListener
 
         if (username == null || username.isEmpty())
         {
-            Test.displayInfoMessage("Empty username!", "Please complete fill in the box");
+            Main.displayInfoMessage("Empty username!", "Please complete fill in the box");
             return false;
         }
 
-        Matcher usernameMat = Test.STUDENT_ID_PATTERN.matcher(username);
+        Matcher usernameMat = Main.STUDENT_ID_PATTERN.matcher(username);
 
         if (usernameMat.matches())
         {
@@ -293,7 +293,7 @@ public class Test implements ActionListener, KeyListener
         }
         else
         {
-            Test.displayInfoMessage("Invalid username pattern!", "Must be your Student ID and at least 11 characters");
+            Main.displayInfoMessage("Invalid username pattern!", "Must be your Student ID and at least 11 characters");
             return false;
         }
     }
@@ -304,7 +304,7 @@ public class Test implements ActionListener, KeyListener
 
         if (password == null || password.isEmpty())
         {
-            Test.displayInfoMessage("Empty password!", "Please complete fill in the box");
+            Main.displayInfoMessage("Empty password!", "Please complete fill in the box");
             return false;
         }
         return true;
