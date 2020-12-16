@@ -28,6 +28,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
     private JPasswordField passwordTextField;
     private JButton loginButton;
     private JButton infoButton;
+    private MenuItem logoutMenu;
     private static final Gson GSON = new Gson();
     private TrayIcon trayIcon;
     private SystemTray tray;
@@ -90,6 +91,10 @@ public class Main extends JFrame implements ActionListener, KeyListener
             //                    + "ชื่อผู้ใช้งาน ใช้ รหัสนักศึกษา<html><p><br />รหัสผ่าน ใช้&nbsp;<em>วันเดือนปีเกิด 6 หลัก และ<br />เลขท้าย 4 หลัก ของเลขบัตรประจำตัวประชาชน</em></p></html>\r\n"
             //                    + "<html><p><br /><strong>ตัวอย่าง</strong><br />เกิดวันที่ 5 กันยายน 2545 &gt; (050945)<br />เลขบัตรประจำตัวประชาชน 250030006<span style=\"color: #ff0000;\">6489</span><br />จะได้รหัสผ่านดังนี้ :&nbsp;<strong>0509456489</strong></p></html>", "การลงชื่อเข้าใช้งานระบบ", JOptionPane.INFORMATION_MESSAGE);
         }
+        else if (event.getSource() == this.logoutMenu)
+        {
+            this.processLogout();
+        }
     }
 
     @Override
@@ -136,9 +141,9 @@ public class Main extends JFrame implements ActionListener, KeyListener
             }
 
             PopupMenu popup = new PopupMenu();
-            MenuItem logout = new MenuItem("Logout");
-            logout.addActionListener(event -> this.processLogout());
-            popup.add(logout);
+            this.logoutMenu = new MenuItem("Logout");
+            this.logoutMenu.addActionListener(this);
+            popup.add(this.logoutMenu);
             this.trayIcon = new TrayIcon(image, "Net Login", popup);
             this.trayIcon.setImageAutoSize(true);
         }
