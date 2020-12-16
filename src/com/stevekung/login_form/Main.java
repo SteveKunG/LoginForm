@@ -17,12 +17,13 @@ import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 
 import com.google.gson.Gson;
 
-public class Main implements ActionListener, KeyListener
+public class Main extends JFrame implements ActionListener, KeyListener
 {
-    private final JFrame frame = new JFrame();
+    private JPanel contentPane;
     private JTextField usernameField;
     private JPasswordField passwordTextField;
     private JButton loginButton;
@@ -42,16 +43,13 @@ public class Main implements ActionListener, KeyListener
         SwingUtilities.invokeLater(Main::new);
     }
 
-    /**
-     * @wbp.parser.entryPoint
-     */
     public Main()
     {
         this.init();
 
         try
         {
-            this.frame.setIconImage(ImageIO.read(new File("resources/icon.png")));
+            this.setIconImage(ImageIO.read(new File("resources/icon.png")));
         }
         catch (IOException e)
         {
@@ -86,8 +84,6 @@ public class Main implements ActionListener, KeyListener
                     + "เลขบัตรประจำตัวประชาชน 2500300066489\r\n"
                     + "จะได้รหัสผ่านดังนี้ : 0509456489", "การลงชื่อเข้าใช้งานระบบ", JOptionPane.INFORMATION_MESSAGE);
 
-
-
             //            JOptionPane.showMessageDialog(frame, "<html><p><strong>สำหรับบุคลากร</strong></p>\r\n"
             //                    + "ใช้ ชื่อผู้ใช้ และ รหัสผ่าน ระบบบัญชีเดียว (Single Sign On.)\r\n"
             //                    + "<html><p><strong>สำหรับนักศึกษา</strong></p></html>\r\n"
@@ -101,7 +97,7 @@ public class Main implements ActionListener, KeyListener
     {
         if (event.isAltDown() && event.getKeyCode() == KeyEvent.VK_F4)
         {
-            this.frame.dispose();
+            this.dispose();
         }
 
         if (event.getSource() == this.usernameField || event.getSource() == this.passwordTextField)
@@ -152,12 +148,20 @@ public class Main implements ActionListener, KeyListener
         }
 
         Rectangle rectangle = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
-        this.frame.setUndecorated(true);
-        this.frame.setAlwaysOnTop(true);
-        this.frame.setExtendedState(Frame.MAXIMIZED_BOTH);
-        this.frame.setSize(rectangle.width, rectangle.height);
-        this.frame.setType(JFrame.Type.UTILITY);
-        this.frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        this.setUndecorated(true);
+        this.setAlwaysOnTop(true);
+        this.setExtendedState(Frame.MAXIMIZED_BOTH);
+        this.setSize(rectangle.width, rectangle.height);
+        this.setType(JFrame.Type.UTILITY);
+        this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        this.setVisible(true);
+
+        this.contentPane = new JPanel();
+        this.contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+        this.contentPane.addKeyListener(this);
+        this.contentPane.setFocusable(true);
+        this.contentPane.setFocusTraversalKeysEnabled(false);
+        this.setContentPane(this.contentPane);
 
         try
         {
@@ -167,13 +171,6 @@ public class Main implements ActionListener, KeyListener
         {
             e.printStackTrace();
         }
-
-        this.frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        this.frame.setVisible(true);
-        this.frame.getContentPane().addKeyListener(this);
-        this.frame.getContentPane().setFocusable(true);
-        this.frame.getContentPane().setFocusTraversalKeysEnabled(false);
-        this.frame.getContentPane().setLayout(null);
 
         try
         {
@@ -187,46 +184,87 @@ public class Main implements ActionListener, KeyListener
 
         UIManager.put("OptionPane.messageFont", this.font);
         UIManager.put("OptionPane.buttonFont", this.font);
-        this.frame.setFont(this.font);
+        this.setFont(this.font);
+
+        JPanel backgroundPanel = new JPanel()
+        {
+            @Override
+            public void paintComponent(Graphics graphics)
+            {
+                try
+                {
+                    Image image = ImageIO.read(new File("resources/bg.png"));
+                    graphics.drawImage(image, 0, 0, this.getSize().width, this.getSize().height, this);
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        };
+        backgroundPanel.setBackground(Color.LIGHT_GRAY);
+
+        JPanel panel = new JPanel();
+        GroupLayout groupLayout = new GroupLayout(this.contentPane);
+        groupLayout.setHorizontalGroup(groupLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                .addGroup(GroupLayout.Alignment.TRAILING, groupLayout.createSequentialGroup()
+                        .addComponent(backgroundPanel, GroupLayout.DEFAULT_SIZE, 1217, Short.MAX_VALUE)
+                        .addGap(18)
+                        .addComponent(panel, GroupLayout.PREFERRED_SIZE, 409, GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap()));
+        groupLayout.setVerticalGroup(groupLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                .addGroup(groupLayout.createSequentialGroup()
+                        .addComponent(panel, GroupLayout.PREFERRED_SIZE, 964, Short.MAX_VALUE)
+                        .addGap(11))
+                .addComponent(backgroundPanel, GroupLayout.DEFAULT_SIZE, 1028, Short.MAX_VALUE));
+        GridBagLayout gridBagLayout = new GridBagLayout();
+        gridBagLayout.columnWidths = new int[]{ 45, 248, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        gridBagLayout.rowHeights = new int[]{ 23, 272, 0, 0, 47, 0, 0, 48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        gridBagLayout.columnWeights = new double[]{ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
+        gridBagLayout.rowWeights = new double[]{ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
+        panel.setLayout(gridBagLayout);
 
         this.usernameField = new JTextField();
-        this.usernameField.setBounds(121, 102, 174, 20);
         this.usernameField.addKeyListener(this);
         this.usernameField.setFont(this.font.deriveFont(Font.PLAIN, 18.0F));
-        this.frame.getContentPane().add(this.usernameField);
+        GridBagConstraints usernameGbc = new GridBagConstraints();
+        usernameGbc.fill = GridBagConstraints.BOTH;
+        usernameGbc.gridheight = 2;
+        usernameGbc.insets = new Insets(0, 0, 5, 5);
+        usernameGbc.gridx = 1;
+        usernameGbc.gridy = 4;
+        panel.add(this.usernameField, usernameGbc);
         this.usernameField.setColumns(10);
 
         this.passwordTextField = new JPasswordField();
-        this.passwordTextField.setBounds(121, 164, 174, 20);
         this.passwordTextField.addKeyListener(this);
-        this.passwordTextField.setFont(this.passwordTextField.getFont().deriveFont(18.0F));
-        this.frame.getContentPane().add(this.passwordTextField);
+        this.passwordTextField.setFont(this.passwordTextField.getFont().deriveFont(20.0F));
+        GridBagConstraints passwordGbc = new GridBagConstraints();
+        passwordGbc.fill = GridBagConstraints.BOTH;
+        passwordGbc.gridheight = 2;
+        passwordGbc.insets = new Insets(0, 0, 5, 5);
+        passwordGbc.gridx = 1;
+        passwordGbc.gridy = 7;
+        panel.add(this.passwordTextField, passwordGbc);
         this.passwordTextField.setColumns(10);
 
         this.loginButton = new JButton("Login");
         this.loginButton.addActionListener(this);
-        this.loginButton.setBounds(121, 195, 89, 44);
         this.loginButton.setFont(this.font);
-        this.frame.getContentPane().add(this.loginButton);
-
-        JLabel usernameLabel = new JLabel("รหัสนักศึกษา/Student ID");
-        usernameLabel.setBounds(111, 71, 199, 20);
-        usernameLabel.setFont(this.font);
-        this.frame.getContentPane().add(usernameLabel);
-
-        JLabel passwordLabel = new JLabel("รหัสผ่าน/Password");
-        passwordLabel.setBounds(113, 133, 197, 20);
-        passwordLabel.setFont(this.font);
-        this.frame.getContentPane().add(passwordLabel);
-
-        JLabel titleLabel = new JLabel("LPRU Authentication");
-        titleLabel.setBounds(111, 38, 184, 20);
-        titleLabel.setFont(this.font);
-        this.frame.getContentPane().add(titleLabel);
+        GridBagConstraints loginGbc = new GridBagConstraints();
+        loginGbc.anchor = GridBagConstraints.WEST;
+        loginGbc.insets = new Insets(0, 0, 5, 5);
+        loginGbc.gridx = 1;
+        loginGbc.gridy = 9;
+        panel.add(this.loginButton, loginGbc);
 
         this.infoButton = new JButton("");
         this.infoButton.addActionListener(this);
-        this.infoButton.setBounds(251, 195, 44, 44);
+        GridBagConstraints infoGbc = new GridBagConstraints();
+        infoGbc.anchor = GridBagConstraints.WEST;
+        infoGbc.insets = new Insets(0, 0, 5, 5);
+        infoGbc.gridx = 1;
+        infoGbc.gridy = 10;
 
         try
         {
@@ -238,7 +276,36 @@ public class Main implements ActionListener, KeyListener
             e.printStackTrace();
         }
 
-        this.frame.getContentPane().add(this.infoButton);
+        panel.add(this.infoButton, infoGbc);
+
+        JLabel titleLabel = new JLabel("LPRU Authentication");
+        titleLabel.setFont(this.font.deriveFont(32.0F));
+        GridBagConstraints titleGbc = new GridBagConstraints();
+        titleGbc.fill = GridBagConstraints.HORIZONTAL;
+        titleGbc.insets = new Insets(0, 0, 5, 5);
+        titleGbc.gridx = 1;
+        titleGbc.gridy = 2;
+        panel.add(titleLabel, titleGbc);
+
+        JLabel usernameLabel = new JLabel("รหัสนักศึกษา/Student ID");
+        usernameLabel.setFont(this.font);
+        GridBagConstraints usernameLabelGbc = new GridBagConstraints();
+        usernameLabelGbc.fill = GridBagConstraints.HORIZONTAL;
+        usernameLabelGbc.insets = new Insets(0, 0, 5, 5);
+        usernameLabelGbc.gridx = 1;
+        usernameLabelGbc.gridy = 3;
+        panel.add(usernameLabel, usernameLabelGbc);
+
+        JLabel passwordLabel = new JLabel("รหัสผ่าน/Password");
+        passwordLabel.setFont(this.font);
+        GridBagConstraints passwordLabelGbc = new GridBagConstraints();
+        passwordLabelGbc.fill = GridBagConstraints.HORIZONTAL;
+        passwordLabelGbc.insets = new Insets(0, 0, 5, 5);
+        passwordLabelGbc.gridx = 1;
+        passwordLabelGbc.gridy = 6;
+        panel.add(passwordLabel, passwordLabelGbc);
+
+        this.contentPane.setLayout(groupLayout);
     }
 
     private boolean performedLogin()
@@ -300,12 +367,12 @@ public class Main implements ActionListener, KeyListener
 
             if (data.isLoggedIn())
             {
-                System.out.println("logged in");
+                System.out.println("Logged in");
 
                 try
                 {
-                    Main.this.tray.add(Main.this.trayIcon);
-                    Main.this.frame.setVisible(false);
+                    this.tray.add(this.trayIcon);
+                    this.setVisible(false);
                 }
                 catch (AWTException e)
                 {
@@ -376,8 +443,8 @@ public class Main implements ActionListener, KeyListener
 
     private void processLogout()
     {
-        this.frame.setVisible(true);
-        this.frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+        this.setVisible(true);
+        this.setExtendedState(Frame.MAXIMIZED_BOTH);
         this.tray.remove(this.trayIcon);
         this.passwordTextField.setText("");
     }
