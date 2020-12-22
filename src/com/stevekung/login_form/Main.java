@@ -11,6 +11,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -33,11 +36,13 @@ public class Main extends JFrame implements ActionListener, KeyListener
     private TrayIcon trayIcon;
     private SystemTray tray;
     private Font font;
+    private boolean loggedIn;
+    private String username;
+    private String password;
 
     private static final Pattern STUDENT_ID_PATTERN = Pattern.compile("^(?=.*\\d).{11}$");
     private static final String API_URL = "http://aritdoc.lpru.ac.th/api/api2/authentication";
-
-    //TODO Generated QR Code > Phone > Server > Client
+    private static final String API_URL2 = "http://aritdoc.lpru.ac.th/api/api2/alive";
 
     public static void main(String[] args)
     {
@@ -328,17 +333,32 @@ public class Main extends JFrame implements ActionListener, KeyListener
         {
             return false;
         }
+        this.username = this.usernameField.getText();
+        this.password = String.valueOf(this.passwordTextField.getPassword());
+        return this.scheduleSendingData(Main.API_URL);
+    }
 
+    private void runLogin()
+    {
+        if (this.loggedIn)
+        {
+            ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
+            exec.scheduleAtFixedRate(() -> this.scheduleSendingData(Main.API_URL2), 0, 1, TimeUnit.MINUTES);
+        }
+    }
+
+    private boolean scheduleSendingData(String urlString)
+    {
         try
         {
-            URL url = new URL(Main.API_URL);
+            URL url = new URL(urlString);
             HttpURLConnection http = (HttpURLConnection) url.openConnection();
             http.setRequestMethod("POST");
             http.setDoOutput(true);
 
             Map<String, String> arguments = new HashMap<>();
-            arguments.put("username", this.usernameField.getText());
-            arguments.put("password", String.valueOf(this.passwordTextField.getPassword()));
+            arguments.put("username", this.username);
+            arguments.put("password", this.password);
 
             String ip = "10.0.0.1";
 
@@ -374,20 +394,26 @@ public class Main extends JFrame implements ActionListener, KeyListener
             {
                 System.out.println("Logged in");
 
-                try
+                if (!this.loggedIn)
                 {
-                    this.tray.add(this.trayIcon);
-                    this.setVisible(false);
-                }
-                catch (AWTException e)
-                {
-                    e.printStackTrace();
+                    try
+                    {
+                        this.tray.add(this.trayIcon);
+                        this.setVisible(false);
+                        this.loggedIn = true;
+                        this.runLogin();
+                    }
+                    catch (AWTException e)
+                    {
+                        e.printStackTrace();
+                    }
                 }
                 return true;
             }
             else
             {
                 Main.displayErrorMessage("ไม่สามารถล็อกอินได้", "โปรดเช็คชื่อผู้ใช้และรหัสผ่านให้ถูกต้อง");
+                this.processLogout();
                 return false;
             }
         }
@@ -451,7 +477,9 @@ public class Main extends JFrame implements ActionListener, KeyListener
         this.setVisible(true);
         this.setExtendedState(Frame.MAXIMIZED_BOTH);
         this.tray.remove(this.trayIcon);
+        this.username = this.password = null;
         this.passwordTextField.setText("");
+        this.loggedIn = false;
     }
 
     private static void displayInfoMessage(String message, String info)
