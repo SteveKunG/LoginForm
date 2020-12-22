@@ -5,7 +5,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -55,7 +58,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
 
         try
         {
-            this.setIconImage(ImageIO.read(new File("resources/icon.png")));
+            this.setIconImage(ImageIO.read(this.getResource("icon.png")));
         }
         catch (IOException e)
         {
@@ -138,7 +141,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
 
             try
             {
-                image = ImageIO.read(new File("resources/icon.png"));
+                image = ImageIO.read(this.getResource("icon.png"));
             }
             catch (IOException e)
             {
@@ -184,7 +187,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
 
         try
         {
-            this.font = Font.createFont(Font.TRUETYPE_FONT, new FileInputStream("resources/kanit.ttf"));
+            this.font = Font.createFont(Font.TRUETYPE_FONT, Main.class.getResource("/resources/kanit.ttf").openStream());
             this.font = this.font.deriveFont(Font.PLAIN, 18.0F);
         }
         catch (FontFormatException | IOException e)
@@ -203,7 +206,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
             {
                 try
                 {
-                    Image image = ImageIO.read(new File("resources/bg.png"));
+                    Image image = ImageIO.read(Main.this.getResource("bg.png"));
                     graphics.drawImage(image, 0, 0, this.getSize().width, this.getSize().height, this);
                 }
                 catch (IOException e)
@@ -278,7 +281,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
 
         try
         {
-            Image image = ImageIO.read(new File("resources/help.png")).getScaledInstance(44, 44, Image.SCALE_SMOOTH);
+            Image image = ImageIO.read(this.getResource("help.png")).getScaledInstance(44, 44, Image.SCALE_SMOOTH);
             this.infoButton.setIcon(new ImageIcon(image));
         }
         catch (IOException e)
@@ -480,6 +483,11 @@ public class Main extends JFrame implements ActionListener, KeyListener
         this.username = this.password = null;
         this.passwordTextField.setText("");
         this.loggedIn = false;
+    }
+
+    private URL getResource(String fileName)
+    {
+        return Main.class.getResource("/resources/" + fileName);
     }
 
     private static void displayInfoMessage(String message, String info)
