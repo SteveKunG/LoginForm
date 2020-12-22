@@ -27,6 +27,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
 public class Main extends JFrame implements ActionListener, KeyListener
 {
@@ -166,7 +167,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
         this.setAlwaysOnTop(true);
         this.setExtendedState(Frame.MAXIMIZED_BOTH);
         this.setSize(rectangle.width, rectangle.height);
-        this.setType(JFrame.Type.UTILITY);
+        this.setType(JFrame.Type.NORMAL);
         this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         this.setVisible(true);
 
@@ -353,6 +354,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
             HttpURLConnection http = (HttpURLConnection) url.openConnection();
             http.setRequestMethod("POST");
             http.setDoOutput(true);
+            http.setInstanceFollowRedirects(false);
 
             Map<String, String> arguments = new HashMap<>();
             arguments.put("username", this.username);
@@ -415,15 +417,21 @@ public class Main extends JFrame implements ActionListener, KeyListener
                 return false;
             }
         }
+        catch (JsonSyntaxException e)
+        {
+            Main.displayErrorMessage("ไม่สามารถอ่านข้อมูล Json ได้", e.getStackTrace());
+            e.printStackTrace();
+            return false;
+        }
         catch (MalformedURLException | ProtocolException e)
         {
-            Main.displayErrorMessage("ไม่สามารถเชื่อมต่อฐานข้อมูลได้", e.getMessage());
+            Main.displayErrorMessage("ไม่สามารถเชื่อมต่อฐานข้อมูลได้", e.getStackTrace());
             e.printStackTrace();
             return false;
         }
         catch (IOException e)
         {
-            Main.displayErrorMessage("ไม่สามารถส่งข้อมูลไปยังฐานข้อมูลได้", e.getMessage());
+            Main.displayErrorMessage("ไม่สามารถส่งข้อมูลไปยังฐานข้อมูลได้", e.getStackTrace());
             e.printStackTrace();
             return false;
         }
@@ -485,17 +493,17 @@ public class Main extends JFrame implements ActionListener, KeyListener
         return Main.class.getResource("/resources/" + fileName);
     }
 
-    private static void displayInfoMessage(String message, String info)
+    private static void displayInfoMessage(String message, Object info)
     {
         JFrame frame = new JFrame();
         frame.setAlwaysOnTop(true);
-        JOptionPane.showMessageDialog(frame, "เหตุผล: " + info, message, JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(frame, info, message, JOptionPane.INFORMATION_MESSAGE);
     }
 
-    private static void displayErrorMessage(String message, String info)
+    private static void displayErrorMessage(String message, Object info)
     {
         JFrame frame = new JFrame();
         frame.setAlwaysOnTop(true);
-        JOptionPane.showMessageDialog(frame, "เหตุผล: " + info, message, JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(frame, info, message, JOptionPane.ERROR_MESSAGE);
     }
 }
