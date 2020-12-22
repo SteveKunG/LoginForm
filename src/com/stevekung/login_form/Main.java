@@ -5,10 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -419,19 +416,19 @@ public class Main extends JFrame implements ActionListener, KeyListener
         }
         catch (JsonSyntaxException e)
         {
-            Main.displayErrorMessage("ไม่สามารถอ่านข้อมูล Json ได้", e.getStackTrace());
+            Main.displayErrorMessage("ไม่สามารถอ่านข้อมูล Json ได้", Main.shortenedStackTrace(e, 10));
             e.printStackTrace();
             return false;
         }
         catch (MalformedURLException | ProtocolException e)
         {
-            Main.displayErrorMessage("ไม่สามารถเชื่อมต่อฐานข้อมูลได้", e.getStackTrace());
+            Main.displayErrorMessage("ไม่สามารถเชื่อมต่อฐานข้อมูลได้", Main.shortenedStackTrace(e, 10));
             e.printStackTrace();
             return false;
         }
         catch (IOException e)
         {
-            Main.displayErrorMessage("ไม่สามารถส่งข้อมูลไปยังฐานข้อมูลได้", e.getStackTrace());
+            Main.displayErrorMessage("ไม่สามารถส่งข้อมูลไปยังฐานข้อมูลได้", Main.shortenedStackTrace(e, 10));
             e.printStackTrace();
             return false;
         }
@@ -491,6 +488,20 @@ public class Main extends JFrame implements ActionListener, KeyListener
     private URL getResource(String fileName)
     {
         return Main.class.getResource("/resources/" + fileName);
+    }
+
+    private static String shortenedStackTrace(Exception e, int maxLines)
+    {
+        StringWriter writer = new StringWriter();
+        e.printStackTrace(new PrintWriter(writer));
+        String[] lines = writer.toString().split("\n");
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < Math.min(lines.length, maxLines); i++)
+        {
+            sb.append(lines[i]).append("\n");
+        }
+        return sb.toString();
     }
 
     private static void displayInfoMessage(String message, Object info)
