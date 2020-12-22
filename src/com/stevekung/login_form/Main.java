@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -29,23 +30,24 @@ import com.google.gson.Gson;
 
 public class Main extends JFrame implements ActionListener, KeyListener
 {
-    private JPanel contentPane;
-    private JTextField usernameField;
-    private JPasswordField passwordTextField;
-    private JButton loginButton;
-    private JButton infoButton;
-    private MenuItem logoutMenu;
+    private static final ScheduledExecutorService EXEC = Executors.newSingleThreadScheduledExecutor();
     private static final Gson GSON = new Gson();
+    private static final Pattern STUDENT_ID_PATTERN = Pattern.compile("^(?=.*\\d).{11}$");
+    private static final String API_URL = "http://aritdoc.lpru.ac.th/api/api2/authentication";
+    private static final String API_URL2 = "http://aritdoc.lpru.ac.th/api/api2/alive";
+
+    private final JPanel contentPane = new JPanel();
+    private final JTextField usernameField = new JTextField();
+    private final JPasswordField passwordTextField = new JPasswordField();
+    private final JButton loginButton = new JButton("Login");
+    private final JButton infoButton = new JButton("");
+    private final MenuItem logoutMenu = new MenuItem("Logout");
     private TrayIcon trayIcon;
     private SystemTray tray;
     private Font font;
     private boolean loggedIn;
     private String username;
     private String password;
-
-    private static final Pattern STUDENT_ID_PATTERN = Pattern.compile("^(?=.*\\d).{11}$");
-    private static final String API_URL = "http://aritdoc.lpru.ac.th/api/api2/authentication";
-    private static final String API_URL2 = "http://aritdoc.lpru.ac.th/api/api2/alive";
 
     public static void main(String[] args)
     {
@@ -108,10 +110,10 @@ public class Main extends JFrame implements ActionListener, KeyListener
     @Override
     public void keyPressed(KeyEvent event)
     {
-        if (event.isAltDown() && event.getKeyCode() == KeyEvent.VK_F4)
+        /*if (event.isAltDown() && event.getKeyCode() == KeyEvent.VK_F4)
         {
             this.dispose();
-        }
+        }*/
 
         if (event.getSource() == this.usernameField || event.getSource() == this.passwordTextField)
         {
@@ -149,7 +151,6 @@ public class Main extends JFrame implements ActionListener, KeyListener
             }
 
             PopupMenu popup = new PopupMenu();
-            this.logoutMenu = new MenuItem("Logout");
             this.logoutMenu.addActionListener(this);
             popup.add(this.logoutMenu);
             this.trayIcon = new TrayIcon(image, "Net Login", popup);
@@ -169,7 +170,6 @@ public class Main extends JFrame implements ActionListener, KeyListener
         this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         this.setVisible(true);
 
-        this.contentPane = new JPanel();
         this.contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
         this.contentPane.addKeyListener(this);
         this.contentPane.setFocusable(true);
@@ -187,7 +187,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
 
         try
         {
-            this.font = Font.createFont(Font.TRUETYPE_FONT, Main.class.getResource("/resources/kanit.ttf").openStream());
+            this.font = Font.createFont(Font.TRUETYPE_FONT, this.getResource("kanit.ttf").openStream());
             this.font = this.font.deriveFont(Font.PLAIN, 18.0F);
         }
         catch (FontFormatException | IOException e)
@@ -237,7 +237,6 @@ public class Main extends JFrame implements ActionListener, KeyListener
         gridBagLayout.rowWeights = new double[]{ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
         panel.setLayout(gridBagLayout);
 
-        this.usernameField = new JTextField();
         this.usernameField.addKeyListener(this);
         this.usernameField.setFont(this.font.deriveFont(Font.PLAIN, 18.0F));
         GridBagConstraints usernameGbc = new GridBagConstraints();
@@ -249,7 +248,6 @@ public class Main extends JFrame implements ActionListener, KeyListener
         panel.add(this.usernameField, usernameGbc);
         this.usernameField.setColumns(10);
 
-        this.passwordTextField = new JPasswordField();
         this.passwordTextField.addKeyListener(this);
         this.passwordTextField.setFont(this.passwordTextField.getFont().deriveFont(20.0F));
         GridBagConstraints passwordGbc = new GridBagConstraints();
@@ -261,7 +259,6 @@ public class Main extends JFrame implements ActionListener, KeyListener
         panel.add(this.passwordTextField, passwordGbc);
         this.passwordTextField.setColumns(10);
 
-        this.loginButton = new JButton("Login");
         this.loginButton.addActionListener(this);
         this.loginButton.setFont(this.font);
         GridBagConstraints loginGbc = new GridBagConstraints();
@@ -271,7 +268,6 @@ public class Main extends JFrame implements ActionListener, KeyListener
         loginGbc.gridy = 9;
         panel.add(this.loginButton, loginGbc);
 
-        this.infoButton = new JButton("");
         this.infoButton.addActionListener(this);
         GridBagConstraints infoGbc = new GridBagConstraints();
         infoGbc.anchor = GridBagConstraints.WEST;
@@ -345,8 +341,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
     {
         if (this.loggedIn)
         {
-            ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
-            exec.scheduleAtFixedRate(() -> this.scheduleSendingData(Main.API_URL2), 0, 1, TimeUnit.MINUTES);
+            Main.EXEC.scheduleAtFixedRate(() -> this.scheduleSendingData(Main.API_URL2), 0, 1, TimeUnit.MINUTES);
         }
     }
 
@@ -395,7 +390,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
 
             if (data.isLoggedIn())
             {
-                System.out.println("Logged in");
+                System.out.println("Logged in: " + new Date(System.currentTimeMillis()));
 
                 if (!this.loggedIn)
                 {
