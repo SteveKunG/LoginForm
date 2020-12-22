@@ -26,13 +26,16 @@ import javax.swing.border.EmptyBorder;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
+/**
+ * ไฟล์หลักของหน้า UI Login LPRU
+ */
 public class Main extends JFrame implements ActionListener, KeyListener
 {
     private static final ScheduledExecutorService EXEC = Executors.newSingleThreadScheduledExecutor();
     private static final Gson GSON = new Gson();
     private static final Pattern STUDENT_ID_PATTERN = Pattern.compile("^(?=.*\\d).{11}$");
-    private static final String API_URL = "http://aritdoc.lpru.ac.th/api/api2/authentication";
-    private static final String API_URL2 = "http://aritdoc.lpru.ac.th/api/api2/alive";
+    private static final String API_URL = "http://aritdoc.lpru.ac.th/api/api2/authentication"; // URL API ของ lpru
+    private static final String API_URL2 = "http://aritdoc.lpru.ac.th/api/api2/alive"; // URL API ของ lpru สำหรับเช็คว่ายัง login อยู่หรือไม่
 
     private final JPanel contentPane = new JPanel();
     private final JTextField usernameField = new JTextField();
@@ -58,7 +61,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
 
         try
         {
-            this.setIconImage(ImageIO.read(this.getResource("icon.png")));
+            this.setIconImage(ImageIO.read(this.getResource("icon.png"))); // เปลี่ยน Icon ของโปรแกรม
         }
         catch (IOException e)
         {
@@ -108,10 +111,11 @@ public class Main extends JFrame implements ActionListener, KeyListener
     @Override
     public void keyPressed(KeyEvent event)
     {
-        /*if (event.isAltDown() && event.getKeyCode() == KeyEvent.VK_F4)
+        // ใช้ในกรณีโปรแกรมเสียหรือ test เท่านั้น!
+        if (event.isShiftDown() && event.isAltDown() && event.getKeyCode() == KeyEvent.VK_F4)
         {
             this.dispose();
-        }*/
+        }
 
         if (event.getSource() == this.usernameField || event.getSource() == this.passwordTextField)
         {
@@ -141,7 +145,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
 
             try
             {
-                image = ImageIO.read(this.getResource("icon.png"));
+                image = ImageIO.read(this.getResource("icon.png")); // เปลี่ยน Icon ของโปรแกรม
             }
             catch (IOException e)
             {
@@ -164,7 +168,6 @@ public class Main extends JFrame implements ActionListener, KeyListener
         this.setAlwaysOnTop(true);
         this.setExtendedState(Frame.MAXIMIZED_BOTH);
         this.setSize(rectangle.width, rectangle.height);
-        this.setType(JFrame.Type.NORMAL);
         this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         this.setVisible(true);
 
@@ -185,14 +188,15 @@ public class Main extends JFrame implements ActionListener, KeyListener
 
         try
         {
-            this.font = Font.createFont(Font.TRUETYPE_FONT, this.getResource("kanit.ttf").openStream());
-            this.font = this.font.deriveFont(Font.PLAIN, 18.0F);
+            this.font = Font.createFont(Font.TRUETYPE_FONT, this.getResource("kanit.ttf").openStream()); // แก้ Font
+            this.font = this.font.deriveFont(Font.PLAIN, 18.0F); // แก้ Style และขนาดของ Font
         }
         catch (FontFormatException | IOException e)
         {
             e.printStackTrace();
         }
 
+        // แก้ Font ของ UI ในโปรแกรม
         UIManager.put("OptionPane.messageFont", this.font);
         UIManager.put("OptionPane.buttonFont", this.font);
         this.setFont(this.font);
@@ -204,7 +208,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
             {
                 try
                 {
-                    Image image = ImageIO.read(Main.this.getResource("bg.png"));
+                    Image image = ImageIO.read(Main.this.getResource("bg.png")); // แก้ background หน้า login
                     graphics.drawImage(image, 0, 0, this.getSize().width, this.getSize().height, this);
                 }
                 catch (IOException e)
@@ -236,7 +240,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
         panel.setLayout(gridBagLayout);
 
         this.usernameField.addKeyListener(this);
-        this.usernameField.setFont(this.font.deriveFont(Font.PLAIN, 18.0F));
+        this.usernameField.setFont(this.font.deriveFont(Font.PLAIN, 18.0F)); // แก้ Style และขนาดของ Font
         GridBagConstraints usernameGbc = new GridBagConstraints();
         usernameGbc.fill = GridBagConstraints.BOTH;
         usernameGbc.gridheight = 2;
@@ -247,7 +251,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
         this.usernameField.setColumns(10);
 
         this.passwordTextField.addKeyListener(this);
-        this.passwordTextField.setFont(this.passwordTextField.getFont().deriveFont(20.0F));
+        this.passwordTextField.setFont(this.passwordTextField.getFont().deriveFont(20.0F)); // แก้ขนาดของ Font
         GridBagConstraints passwordGbc = new GridBagConstraints();
         passwordGbc.fill = GridBagConstraints.BOTH;
         passwordGbc.gridheight = 2;
@@ -315,6 +319,10 @@ public class Main extends JFrame implements ActionListener, KeyListener
         this.contentPane.setLayout(groupLayout);
     }
 
+    /**
+     * ใช้เมื่อปุ่ม login ถูกเรียกใช้งาน
+     * @return true ถ้า login ผ่านจะรัน {@link #scheduleSendingData(String) scheduleSendingData}, false ถ้า username/password ไม่ถูกต้อง
+     */
     private boolean performedLogin()
     {
         boolean checkedUsername = this.checkUsername();
@@ -335,14 +343,22 @@ public class Main extends JFrame implements ActionListener, KeyListener
         return this.scheduleSendingData(Main.API_URL);
     }
 
+    /**
+     * ถ้า login ผ่าน method จะรัน {@link #scheduleSendingData(String) scheduleSendingData} ทุก ๆ 1 นาที
+     */
     private void runLogin()
     {
         if (this.loggedIn)
         {
-            Main.EXEC.scheduleAtFixedRate(() -> this.scheduleSendingData(Main.API_URL2), 0, 1, TimeUnit.MINUTES);
+            Main.EXEC.scheduleAtFixedRate(() -> this.scheduleSendingData(Main.API_URL2), 0, 1L, TimeUnit.MINUTES); // เปลี่ยน 1 เป็น 5 หรือ 10 ได้, TimeUnit จะเป็น MINUTES หรือ SECONDS ได้
         }
     }
 
+    /**
+     * ใช้เมื่อกด login หรือ login ผ่านแล้ว
+     * @param urlString URL ของ API
+     * @return true ถ้าส่งข้อมูลผ่าน, false ถ้าเกิด error หรือส่งข้อมูลไม่ผ่าน
+     */
     private boolean scheduleSendingData(String urlString)
     {
         try
@@ -353,11 +369,10 @@ public class Main extends JFrame implements ActionListener, KeyListener
             http.setDoOutput(true);
             http.setInstanceFollowRedirects(false);
 
-            Map<String, String> arguments = new HashMap<>();
+            String ip = "10.0.0.1";
+            Map<String, String> arguments = new HashMap<>(); // ใส่ args ที่จะ POST ไปยังเว็บเพิ่ม
             arguments.put("username", this.username);
             arguments.put("password", this.password);
-
-            String ip = "10.0.0.1";
 
             try (DatagramSocket socket = new DatagramSocket())
             {
@@ -366,6 +381,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
             }
 
             arguments.put("ip", ip);
+
             StringJoiner joiner = new StringJoiner("&");
 
             for (Map.Entry<String, String> entry : arguments.entrySet())
@@ -385,9 +401,9 @@ public class Main extends JFrame implements ActionListener, KeyListener
             }
 
             String result = new BufferedReader(new InputStreamReader(http.getInputStream())).lines().collect(Collectors.joining("\n"));
-            LoginData data = Main.GSON.fromJson(result, LoginData.class);
+            LoginData data = Main.GSON.fromJson(result, LoginData.class); // แปลง json เป็น class LoginData
 
-            if (data.isLoggedIn())
+            if (data.isLoggedIn()) // เช็คว่า login แล้ว
             {
                 System.out.println("Logged in: " + new Date(System.currentTimeMillis()));
 
@@ -407,7 +423,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
                 }
                 return true;
             }
-            else
+            else // เช็คว่าไม่สามารถ login ได้
             {
                 Main.displayErrorMessage("ไม่สามารถล็อกอินได้", "โปรดเช็คชื่อผู้ใช้และรหัสผ่านให้ถูกต้อง");
                 this.processLogout();
@@ -434,6 +450,10 @@ public class Main extends JFrame implements ActionListener, KeyListener
         }
     }
 
+    /**
+     * ตรวจสอบ username
+     * @return true ถ้ามี username และ username เป็นรหัสนักศึกษา, false ถ้า username ว่างหรือรหัสนักศึกษาไม่ถูกต้อง
+     */
     private boolean checkUsername()
     {
         String username = this.usernameField.getText();
@@ -444,7 +464,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
             return false;
         }
 
-        Matcher usernameMat = Main.STUDENT_ID_PATTERN.matcher(username);
+        Matcher usernameMat = Main.STUDENT_ID_PATTERN.matcher(username); // ตรวจสอบ pattern รหัสนักศึกษา
 
         if (usernameMat.matches())
         {
@@ -457,6 +477,10 @@ public class Main extends JFrame implements ActionListener, KeyListener
         }
     }
 
+    /**
+     * ตรวจสอบ password
+     * @return true ถ้ามี password, false ถ้า password ว่าง
+     */
     private boolean checkPassword()
     {
         String password = String.valueOf(this.passwordTextField.getPassword());
@@ -469,12 +493,19 @@ public class Main extends JFrame implements ActionListener, KeyListener
         return true;
     }
 
+    /**
+     * ใช้เพื่อ unfocus ของ component
+     * @param com component ต่าง ๆ เช่น text field
+     */
     private void unfocusComponent(Component com)
     {
         com.setFocusable(false);
         com.setFocusable(true);
     }
 
+    /**
+     * logout และกลับไปหน้า login
+     */
     private void processLogout()
     {
         this.setVisible(true);
@@ -485,11 +516,23 @@ public class Main extends JFrame implements ActionListener, KeyListener
         this.loggedIn = false;
     }
 
+    /**
+     * ใช้เพื่อ get resource เช่น รูปภาพ
+     * ไฟล์ทั้งหมดอยู่ในโฟลเดอร์ resources
+     * @param fileName ชื่อของไฟล์ รวมนามสกุล
+     * @return URL ของไฟล์
+     */
     private URL getResource(String fileName)
     {
         return Main.class.getResource("/resources/" + fileName);
     }
 
+    /**
+     * ลดการแสดงผลของ stacktrace
+     * @param e exception
+     * @param maxLines จำนวนที่จะลด
+     * @return exception ที่ลดบรรทัดแล้ว
+     */
     private static String shortenedStackTrace(Exception e, int maxLines)
     {
         StringWriter writer = new StringWriter();
@@ -504,6 +547,11 @@ public class Main extends JFrame implements ActionListener, KeyListener
         return sb.toString();
     }
 
+    /**
+     * แสดงข้อความทั่วไป
+     * @param message หัวข้อ
+     * @param info ข้อความที่จะแสดง
+     */
     private static void displayInfoMessage(String message, Object info)
     {
         JFrame frame = new JFrame();
@@ -511,6 +559,11 @@ public class Main extends JFrame implements ActionListener, KeyListener
         JOptionPane.showMessageDialog(frame, info, message, JOptionPane.INFORMATION_MESSAGE);
     }
 
+    /**
+     * แสดงข้อความ error
+     * @param message หัวข้อ
+     * @param info ข้อความที่จะแสดง
+     */
     private static void displayErrorMessage(String message, Object info)
     {
         JFrame frame = new JFrame();
