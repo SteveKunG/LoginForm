@@ -10,18 +10,12 @@ public abstract class DirectoryWatcher extends TimerTask
     private final DirectoryFilterWatcher watcher;
     private File[] filesArray;
 
-    public DirectoryWatcher(String path)
-    {
-        this(path, "");
-    }
-
     public DirectoryWatcher(String path, String filter)
     {
         this.path = path;
         this.watcher = new DirectoryFilterWatcher(filter);
         this.filesArray = new File(path).listFiles(this.watcher);
 
-        // transfer to the hashmap be used a reference and keep the lastModfied value
         for (File element : this.filesArray)
         {
             this.dir.put(element, new Long(element.lastModified()));
@@ -34,44 +28,37 @@ public abstract class DirectoryWatcher extends TimerTask
         HashSet<File> checkedFiles = new HashSet<>();
         this.filesArray = new File(this.path).listFiles(this.watcher);
 
-        // scan the files and check for modification/addition
+        // สแกนไฟล์และเช็คสถานะ
         for (File element : this.filesArray)
         {
             Long current = this.dir.get(element);
             checkedFiles.add(element);
-            
+
             if (current == null)
             {
-                // new file
+                // เช็คไฟล์ที่ถูกเพิ่ม
                 this.dir.put(element, new Long(element.lastModified()));
-                this.onChange(element, Action.ADD);
+                this.onFileAdd(element);
             }
             else if (current.longValue() != element.lastModified())
             {
-                // modified file
+                // เช็คไฟล์ที่ถูกแก้
                 this.dir.put(element, new Long(element.lastModified()));
-                this.onChange(element, Action.MODIFY);
             }
         }
 
-        // now check for deleted files
+        // เช็คไฟล์ที่ถูกลบ
         @SuppressWarnings("unchecked")
         Set<File> ref = ((HashMap<File, Long>) this.dir.clone()).keySet();
         ref.removeAll(checkedFiles);
         Iterator<File> it = ref.iterator();
-        
+
         while (it.hasNext())
         {
             File deletedFile = it.next();
             this.dir.remove(deletedFile);
-            this.onChange(deletedFile, Action.DELETE);
         }
     }
 
-    protected abstract void onChange(File file, Action action);
-    
-    public enum Action
-    {
-        ADD, MODIFY, DELETE;
-    }
+    protected abstract void onFileAdd(File file);
 }

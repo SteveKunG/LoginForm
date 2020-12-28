@@ -1,6 +1,7 @@
 package com.stevekung.login_form;
 
 import java.awt.*;
+import java.awt.TrayIcon.MessageType;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -23,7 +24,6 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
 /**
@@ -32,10 +32,7 @@ import com.google.gson.JsonSyntaxException;
 public class Main extends JFrame implements ActionListener, KeyListener
 {
     private static final ScheduledExecutorService EXEC = Executors.newSingleThreadScheduledExecutor();
-    private static final Gson GSON = new Gson();
     private static final Pattern STUDENT_ID_PATTERN = Pattern.compile("^(?=.*\\d).{11}$");
-    private static final String API_URL = "http://aritdoc.lpru.ac.th/api/api2/authentication"; // URL API ของ lpru
-    private static final String API_URL2 = "http://aritdoc.lpru.ac.th/api/api2/alive"; // URL API ของ lpru สำหรับเช็คว่ายัง login อยู่หรือไม่
 
     private final JPanel contentPane = new JPanel();
     private final JTextField usernameField = new JTextField();
@@ -49,6 +46,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
     private boolean loggedIn;
     private String username;
     private String password;
+    private int loginAttempt;
 
     public static void main(String[] args)
     {
@@ -340,17 +338,17 @@ public class Main extends JFrame implements ActionListener, KeyListener
         }
         this.username = this.usernameField.getText();
         this.password = String.valueOf(this.passwordTextField.getPassword());
-        return this.scheduleSendingData(Main.API_URL);
+        return this.scheduleSendingData(Constants.API);
     }
 
     /**
-     * ถ้า login ผ่าน method จะรัน {@link #scheduleSendingData(String) scheduleSendingData} ทุก ๆ 1 นาที
+     * ถ้า login ผ่าน method จะรัน {@link #scheduleSendingData(String) scheduleSendingData} ทุก ๆ 5 นาที
      */
     private void runLogin()
     {
         if (this.loggedIn)
         {
-            Main.EXEC.scheduleAtFixedRate(() -> this.scheduleSendingData(Main.API_URL2), 0, 1L, TimeUnit.MINUTES); // เปลี่ยน 1 เป็น 5 หรือ 10 ได้, TimeUnit จะเป็น MINUTES หรือ SECONDS ได้
+            Main.EXEC.scheduleAtFixedRate(() -> this.scheduleSendingData(Constants.ALIVE), 0, 5L, TimeUnit.MINUTES); // เปลี่ยน 1 เป็น 5 หรือ 10 ได้, TimeUnit จะเป็น MINUTES หรือ SECONDS ได้
         }
     }
 
@@ -361,6 +359,12 @@ public class Main extends JFrame implements ActionListener, KeyListener
      */
     private boolean scheduleSendingData(String urlString)
     {
+        if (this.loginAttempt == 3)
+        {
+            this.processLogout();
+            this.loginAttempt = 0;
+        }
+
         try
         {
             URL url = new URL(urlString);
@@ -381,6 +385,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
             }
 
             arguments.put("ip", ip);
+            arguments.put("computer_name", this.getComputerName());
 
             StringJoiner joiner = new StringJoiner("&");
 
@@ -401,7 +406,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
             }
 
             String result = new BufferedReader(new InputStreamReader(http.getInputStream())).lines().collect(Collectors.joining("\n"));
-            LoginData data = Main.GSON.fromJson(result, LoginData.class); // แปลง json เป็น class LoginData
+            LoginData data = Constants.GSON.fromJson(result, LoginData.class); // แปลง json เป็น class LoginData
 
             if (data.isLoggedIn()) // เช็คว่า login แล้ว
             {
@@ -415,6 +420,7 @@ public class Main extends JFrame implements ActionListener, KeyListener
                         this.setVisible(false);
                         this.loggedIn = true;
                         this.runLogin();
+                        this.displayWindowNotification("ล็อกอินแล้ว", "สามารถใช้งานอินเทอร์เน็ตได้");
                     }
                     catch (AWTException e)
                     {
@@ -438,8 +444,16 @@ public class Main extends JFrame implements ActionListener, KeyListener
         }
         catch (MalformedURLException | ProtocolException e)
         {
-            Main.displayErrorMessage("ไม่สามารถเชื่อมต่อฐานข้อมูลได้", Main.shortenedStackTrace(e, 10));
             e.printStackTrace();
+            this.loginAttempt++;
+            this.displayWindowNotification("ไม่สามารถเชื่อมต่อฐานข้อมูลได้", "Protocal ผิดพลาด");
+            return false;
+        }
+        catch (UnknownHostException e)
+        {
+            e.printStackTrace();
+            this.loginAttempt++;
+            this.displayWindowNotification("ไม่สามารถเชื่อมต่อฐานข้อมูลได้", "ไม่ได้เชื่อมต่ออินเทอร์เน็ต");
             return false;
         }
         catch (IOException e)
@@ -525,6 +539,37 @@ public class Main extends JFrame implements ActionListener, KeyListener
     private URL getResource(String fileName)
     {
         return Main.class.getResource("/resources/" + fileName);
+    }
+
+    /**
+     * @return ชื่อของ Computer หรือ Host Name
+     */
+    private String getComputerName()
+    {
+        Map<String, String> env = System.getenv();
+
+        if (env.containsKey("COMPUTERNAME"))
+        {
+            return env.get("COMPUTERNAME");
+        }
+        else if (env.containsKey("HOSTNAME"))
+        {
+            return env.get("HOSTNAME");
+        }
+        else
+        {
+            return "Unknown Computer Name";
+        }
+    }
+
+    /**
+     * แสดงข้อความ Window Notification
+     * @param title หัวข้อความ
+     * @param message ข้อความ
+     */
+    private void displayWindowNotification(String title, String message)
+    {
+        this.trayIcon.displayMessage(title, message, MessageType.INFO);
     }
 
     /**
