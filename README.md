@@ -1,2 +1,2 @@
 # LoginForm
-This is just a simple project
+Simple Login Form using LPRU User Database
